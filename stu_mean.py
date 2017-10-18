@@ -47,17 +47,53 @@ def fillAverages():
 fillAverages()
 #print averages
 
-def display():
-    for i in range(0,len(names)):
-        print "name: " + names[i] + " id: " + str(ids[i]) + " average: " + str(averages[i])
-display()
-
 def createTable():
     command = "CREATE TABLE peeps_avg (id INTEGER, avg REAL);"
     c.execute(command)
     for i in range(0,len(names)):
-        command = "INSERT INTO peeps_avg VALUES (%d, %f)" %(ids[i], averages[i])
+        command = "INSERT INTO peeps_avg VALUES (%d, %f)" %(ids[i], averages.pop(0))
         c.execute(command)
 createTable()
 
-    
+def display():
+    command = 'SELECT * FROM peeps_avg'
+    data = c.execute(command)
+    #for i in range(0,len(names)):
+    print "(id, avg)"
+    for row in data:
+        #print "name: " + names[i] + " id: " + str(ids[i]) + " average: " + str(averages[i])
+        print row
+display()
+
+def updateAvg(studentID):
+    command = "SELECT mark from courses WHERE courses.id = %d" %(studentID)
+    data = c.execute(command)
+    total = 0
+    courses = 0 
+    for x in data:
+        total += x[0]
+        courses += 1
+    if courses > 0:
+        return total*1.0/courses
+    command = 'UPDATE peeps_avg SET avg = total*1.0/courses WHERE id == studentID'
+    c.execute(command)
+
+def addCourse(nCode, nMark, nID):
+    command = 'INSERT INTO courses VALUES ("%s", %s, %s);' %(nCode, nMark, nID)
+    c.execute(command)
+
+def updateCourses():
+    command = "SELECT * FROM courses;"
+    data = c.execute(command)
+    with open('courses.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            for x in data:
+                if(not((x[0] == row['code']) and (x[1] == row['mark']) and (x[2] == row['id']))):
+                    addCourse(x[0],x[1],x[2])
+
+#updateCourses()
+#updateAvg(4)
+#updateAvg(2)
+display()
+
